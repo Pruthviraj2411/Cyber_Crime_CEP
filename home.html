@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Helper - Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- Starfield canvas -->
+<canvas id="starfield"></canvas>
+
+<!-- Home Page Content -->
+<div class="home-container">
+    <nav class="home-nav">
+        <!-- Left side: Logo + Text -->
+        <div class="nav-brand-left">
+            <img src="cc_images/logo.png" alt="Cyber Crime Centre Logo" class="nav-logo">
+            <div class="nav-brand-text">
+                <h2>Cyber Crime Centre</h2>
+                <span class="nav-subtitle">AI powered Cyber security assistant</span>
+            </div>
+        </div>
+
+        <!-- Right side: Navigation Links + Logout -->
+        <div class="nav-links">
+            <a href="home.html" class="nav-item active">Home</a>
+            <a href="#" class="nav-item">My Reports</a>
+            <a href="#" class="nav-item">Safety Tips</a>
+            <a href="#" class="nav-item">Profile</a>
+            <a href="index.html" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+</div>
+
+<!-- Background Canvas is handled below -->
+
+<script>
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let time = 0;
+    
+    // Wire configuration
+    const numWires = 35; // Number of glowing lines
+    const maxPoints = 100; // Resolution of each line
+    
+    // Store particles that travel along the wires
+    const particles = [];
+    const numParticles = 60;
+
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Initialize particles
+    for(let i = 0; i < numParticles; i++) {
+        particles.push({
+            wireIndex: Math.floor(Math.random() * numWires),
+            progress: Math.random(), // 0 to 1 position along the wire
+            speed: 0.002 + Math.random() * 0.005,
+            size: 1.5 + Math.random() * 2,
+            alpha: 0.4 + Math.random() * 0.6
+        });
+    }
+
+    function animate() {
+        // Clear background with extremely faint fade to leave a slight motion trail
+        ctx.fillStyle = 'rgba(5, 5, 15, 0.4)';
+        ctx.fillRect(0, 0, w, h);
+        
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        // Draw the glowing wires
+        for (let i = 0; i < numWires; i++) {
+            ctx.beginPath();
+            
+            // Unique properties for each wire to make them look distinct
+            const wireOffset = i * 2.5; 
+            const ySpread = h * 0.8; // How far the wires spread vertically
+            
+            // Generate the path of the wire
+            for (let j = 0; j <= maxPoints; j++) {
+                const progress = j / maxPoints; // 0 (left) to 1 (right)
+                
+                // Base structure: diagonal flow from bottom-left to top-right
+                const startX = -w * 0.2;
+                const endX = w * 1.2;
+                const x = startX + (endX - startX) * progress;
+                
+                // Base Y slants upwards
+                const startY = h * 1.2;
+                const endY = -h * 0.2;
+                let y = startY + (endY - startY) * progress;
+                
+                // Add wave distortion to the path
+                // Combining sine waves of different frequencies creates organic movement
+                const dist1 = Math.sin(progress * 4 + time + wireOffset * 0.1) * (50 + i * 2);
+                const dist2 = Math.cos(progress * 6 - time * 0.5) * 40;
+                
+                y += dist1 + dist2;
+                
+                // Spread the wires out from the center line
+                const spreadOffset = (i - numWires/2) * (h/numWires);
+                y += spreadOffset * Math.sin(progress * Math.PI); // Pinched at ends, spread in middle
+                
+                if (j === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            // Orange/Copper glow matching reference image
+            const baseAlpha = 0.05 + (Math.sin(time * 2 + i) * 0.02);
+            ctx.strokeStyle = `rgba(255, 140, 50, ${baseAlpha})`;
+            ctx.lineWidth = 1 + (i % 3) * 0.5;
+            
+            // Add glow effect occasionally
+            if (i % 5 === 0) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 120, 30, 0.8)';
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.stroke();
+        }
+        
+        // Disable shadow for particles to keep them crisp
+        ctx.shadowBlur = 0;
+        
+        // Update and draw traveling particles
+        particles.forEach(p => {
+            p.progress += p.speed;
+            if (p.progress >= 1) {
+                p.progress = 0; // Loop back to start
+                p.wireIndex = Math.floor(Math.random() * numWires); // Pick a new wire
+            }
+            
+            const i = p.wireIndex;
+            const progress = p.progress;
+            
+            // Recalculate same path math to find exactly where this particle should be
+            const wireOffset = i * 2.5; 
+            const startX = -w * 0.2;
+            const endX = w * 1.2;
+            const x = startX + (endX - startX) * progress;
+            
+            const startY = h * 1.2;
+            const endY = -h * 0.2;
+            let y = startY + (endY - startY) * progress;
+            
+            const dist1 = Math.sin(progress * 4 + time + wireOffset * 0.1) * (50 + i * 2);
+            const dist2 = Math.cos(progress * 6 - time * 0.5) * 40;
+            y += dist1 + dist2;
+            
+            const spreadOffset = (i - numWires/2) * (h/numWires);
+            y += spreadOffset * Math.sin(progress * Math.PI);
+            
+            // Draw the glowing particle
+            ctx.beginPath();
+            ctx.arc(x, y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 200, 100, ${p.alpha})`; // Brighter orange/yellow center
+            
+            // Simulate a strong light burst on the particle
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = `rgba(255, 150, 50, ${p.alpha})`;
+            
+            ctx.fill();
+        });
+        
+        time += 0.01; // Global speed
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+</script>
+
+</body>
+</html>

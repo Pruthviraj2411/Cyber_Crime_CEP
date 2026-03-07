@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Helper - Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- Starfield canvas -->
+<canvas id="starfield"></canvas>
+
+<div class="login-container">
+    <h2>Cyber Helper</h2>
+    <p>Create your account</p>
+    <form action="dashboard.html">
+        <div class="input-box">
+            <label>Full Name</label>
+            <input type="text" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="input-box">
+            <label>Email</label>
+            <input type="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="input-box">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="Enter your phone number" required>
+        </div>
+
+        <div class="input-box">
+            <label>Password</label>
+            <input type="password" placeholder="Create a password" required>
+        </div>
+
+        <div class="input-box">
+            <label>Confirm Password</label>
+            <input type="password" placeholder="Confirm your password" required>
+        </div>
+
+        <button type="submit">Register</button>
+
+        <p class="register">
+            Already have an account? <a href="index.html">Login</a>
+        </p>
+    </form>
+</div>
+
+<script>
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+
+    let w, h, cx, cy;
+    const STAR_COUNT = 600;
+    const SPEED = 2;
+    let stars = [];
+
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        cx = w / 2;
+        cy = h / 2;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Star {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this.x = (Math.random() - 0.5) * w;
+            this.y = (Math.random() - 0.5) * h;
+            this.z = Math.random() * w;
+            this.pz = this.z;
+        }
+
+        update() {
+            this.pz = this.z;
+            this.z -= SPEED * 2;
+
+            if (this.z < 1) {
+                this.reset();
+                this.z = w;
+                this.pz = this.z;
+            }
+        }
+
+        draw() {
+            const sx = (this.x / this.z) * w + cx;
+            const sy = (this.y / this.z) * h + cy;
+            const px = (this.x / this.pz) * w + cx;
+            const py = (this.y / this.pz) * h + cy;
+
+            const depth = 1 - this.z / w;
+            const size = Math.max(0.5, depth * 3);
+            const alpha = Math.max(0.1, depth);
+
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(sx, sy);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+            ctx.lineWidth = size * 0.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+        const star = new Star();
+        star.z = Math.random() * w;
+        stars.push(star);
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(5, 5, 15, 0.25)';
+        ctx.fillRect(0, 0, w, h);
+
+        stars.forEach(star => {
+            star.update();
+            star.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    ctx.fillStyle = '#05050f';
+    ctx.fillRect(0, 0, w, h);
+    animate();
+</script>
+
+</body>
+</html>
